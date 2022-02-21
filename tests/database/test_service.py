@@ -64,6 +64,11 @@ class CRUDServiceTest(unittest.TestCase):
 
         self.assertEqual(items_test, items_service)
 
+    def test_get_all_by_key(self) -> None:
+        test_inserted_item = self._service.get_by_id(self._testitem.inserted_id)
+        test_selected_item, = self._service.get_all_by_key('test', 'item')
+        self.assertEqual(test_inserted_item, test_selected_item)
+
     def test_update_by_id(self) -> None:
         updated_item = {'test': 'updated_item'}
         self._service.update_by_id(self._testitem.inserted_id, **updated_item)

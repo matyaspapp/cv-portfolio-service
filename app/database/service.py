@@ -14,17 +14,24 @@ class CRUDService:
     def create(self, new_item: T) -> object:
         return self._conn.local[self._collecion].insert_one(new_item)
 
-    def get_by_id(self, id: ObjectId) -> T:
+    def get_by_id(self, id: str | ObjectId) -> T:
+        id = ObjectId(id)
         return self._conn.local[self._collecion].find_one({'_id': id})
 
     def get_all(self) -> list[T]:
         cursor = self._conn.local[self._collecion].find({})
         return [item for item in cursor]
 
-    def update_by_id(self, id: ObjectId, **update_data) -> object:
+    def get_all_by_key(self, key, value):
+        cursor = self._conn.local[self._collecion].find({key: value})
+        return [item for item in cursor]
+
+    def update_by_id(self, id: str | ObjectId, **update_data) -> object:
+        id = ObjectId(id)
         return self._conn \
             .local[self._collecion] \
             .update_one({'_id': id}, {'$set': update_data})
 
-    def delete_by_id(self, id: ObjectId) -> object:
+    def delete_by_id(self, id: str | ObjectId) -> object:
+        id = ObjectId(id)
         return self._conn.local[self._collecion].delete_one({'_id': id})

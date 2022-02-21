@@ -6,7 +6,7 @@ class Transaction(BaseModel):
     owner_id: str
     asset: str
     amount: float
-    price: float
+    historical_price: float
     currency: str
     tags: list[str]
     date: datetime
