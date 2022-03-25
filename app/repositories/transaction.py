@@ -1,7 +1,10 @@
+from typing import Type
 from bson import ObjectId
 from bson.errors import InvalidId
 
+from app.database.connection import conn
 from app.database.service import CRUDService
+from app.schemas.transaction import Transaction
 from app.serializers.transaction import TransactionSerializer
 
 
@@ -14,14 +17,16 @@ class TransactionRepository:
         self._crud_service = crud_service
         self._serializer = serializer
 
-    def create(self, new_transaction: dict) -> str:
-        if len(new_transaction) != 8:
+    def create(self, new_transaction: Transaction) -> str:
+        new_transaction_dict = dict(new_transaction)
+        print("CREATE:", new_transaction)
+        if len(new_transaction_dict) != 8:
             raise ValueError
 
         try:
-            ObjectId(new_transaction['owner_id'])
+            ObjectId(new_transaction_dict['owner_id'])
         except InvalidId:
-            raise ValueError
+            raise
 
         valid_keys = {
             'owner_id',
@@ -33,10 +38,10 @@ class TransactionRepository:
             'date',
             'type'
         }
-        if set(new_transaction.keys()) != valid_keys:
+        if set(new_transaction_dict.keys()) != valid_keys:
             raise ValueError
 
-        inserted_id = self._crud_service.create(new_transaction).inserted_id
+        inserted_id = self._crud_service.create(new_transaction_dict).inserted_id
         return self._serializer.serialize_one(
             self._crud_service.get_by_id(inserted_id)
         )
@@ -45,7 +50,7 @@ class TransactionRepository:
         try:
             id = ObjectId(id)
         except:
-            raise ValueError
+            raise
 
         transaction = self._crud_service.get_by_id(id)
         if not transaction:
@@ -69,11 +74,14 @@ class TransactionRepository:
         )
 
     def update_by_id(self, id: str | ObjectId, update_data: dict) -> dict:
+        if not isinstance(id, str) and not isinstance(id, ObjectId):
+            raise TypeError
+
         id: ObjectId
         try:
             id = ObjectId(id)
         except:
-            raise ValueError
+            raise
 
         update_result = self._crud_service.update_by_id(
             id,
@@ -86,3 +94,79 @@ class TransactionRepository:
         return self._serializer.serialize_one(
             self._crud_service.get_by_id(id)
         )
+
+    def delete_by_id(self, id: str | ObjectId) -> dict:
+        if not isinstance(id, str) and not isinstance(id, ObjectId):
+            raise TypeError
+
+        id: ObjectId
+        try:
+            id = ObjectId(id)
+        except:
+            raise
+
+        deleted_transaction = self._crud_service.get_by_id(id)
+        if not deleted_transaction:
+            return {}
+
+        self._crud_service.delete_by_id(deleted_transaction['_id'])
+
+        return self._serializer.serialize_one(
+            deleted_transaction
+        )
+
+    def calculate_portfolio(self) -> dict:
+        transactions = self.get_all()
+        if not transactions:
+            return {}
+
+        portfolio = {
+            'investment': 0,
+            'assets': {}
+        }
+        # group by assets
+        for transaction in transactions:
+            asset_data = portfolio['assets'].setdefault(
+                transaction['asset'],
+                {
+                    'meta': {},
+                    'transactions': []
+                }
+            )
+            asset_data['transactions'].append(transaction)
+
+        # calculate amount by asset
+        # calculate investment by assets and overall
+        # calculate avg price by asset
+        for asset_data in portfolio['assets'].values():
+            asset_amount = 0
+            asset_investment = 0
+            for transaction in asset_data['transactions']:
+                asset_amount += transaction['amount']
+                asset_investment += \
+                    transaction['amount'] * transaction['historical_price']
+
+            asset_data['meta']['amount'] = asset_amount
+            asset_data['meta']['investment'] = asset_investment
+            asset_data['meta']['average_price'] = asset_investment / asset_amount
+            portfolio['investment'] += asset_investment
+
+        return portfolio
+
+
+def get_transaction_repository():  # pragma: no cover
+    crud_service = CRUDService(conn, 'transactions')
+    repository = TransactionRepository(
+        crud_service,
+        TransactionSerializer
+    )
+    return repository
+
+
+def get_test_transaction_repository():  # pragma: no cover
+    crud_service = CRUDService(conn, 'test_api_transactions')
+    test_repository = TransactionRepository(
+        crud_service,
+        TransactionSerializer
+    )
+    return test_repository

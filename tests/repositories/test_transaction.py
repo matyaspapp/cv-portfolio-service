@@ -1,14 +1,29 @@
+from contextlib import AsyncExitStack
+from pprint import pprint
 import unittest
 
 from bson import ObjectId
+from bson.errors import InvalidId
+from copy import deepcopy
 
 from app.database.service import CRUDService
 from app.repositories.transaction import TransactionRepository
 from app.serializers.transaction import TransactionSerializer
 
-from tests.repositories.consts import TEST_INVALID_TRANSACTIONS, TEST_VALID_TRANSACTIONS
-from tests.repositories.settings import TEST_TRANSACTION_CONN, TEST_TRANSACTION_COLLECTION
+from tests.consts import \
+    TEST_INVALID_TRANSACTIONS, \
+    TEST_VALID_TRANSACTIONS, \
+    TEST_PORTFOLIO
+
+from tests.repositories.settings import \
+    TEST_TRANSACTION_CONN, \
+    TEST_TRANSACTION_COLLECTION
+
 from tests.utils import tag
+
+
+TEST_VALID_TRANSACTIONS = deepcopy(TEST_VALID_TRANSACTIONS)
+TEST_INVALID_TRANSACTIONS = deepcopy(TEST_INVALID_TRANSACTIONS)
 
 
 class TransactionRepositoryCreateTest(unittest.TestCase):
@@ -38,22 +53,23 @@ class TransactionRepositoryCreateTest(unittest.TestCase):
             {'foo': 'bar'}
         )
 
-    def test_getWrongOwnerObjectId_raiseValueError(self) -> None:
+    def test_getWrongOwnerObjectId_raiseInvalidId(self) -> None:
         self.assertRaises(
-            ValueError,
+            InvalidId,
             self._service.create,
-            {'owner_id': '73570wn3r1d'}
+            TEST_INVALID_TRANSACTIONS[0]
         )
 
     def test_getWrongDictKeys_raiseValueError(self) -> None:
         self.assertRaises(
             ValueError,
             self._service.create,
-            TEST_INVALID_TRANSACTIONS[0]
+            TEST_INVALID_TRANSACTIONS[1]
         )
 
     def test_getValidTransactionData_returnSerializedData(self) -> None:
         test_transaction = TEST_VALID_TRANSACTIONS[0]
+        print(TEST_VALID_TRANSACTIONS)
         new_serialized_transaction = self._service.create(test_transaction)
         test_transaction['_id'] = ObjectId(new_serialized_transaction['id'])
         test_serialized_transaction = self._serializer.serialize_one(test_transaction)
@@ -81,9 +97,9 @@ class TransactionRepositoryGetByIdTest(unittest.TestCase):
         super().tearDown()
         TEST_TRANSACTION_CONN.local[TEST_TRANSACTION_COLLECTION].drop()
 
-    def test_getInvalidObjectId_raiseValueError(self) -> None:
+    def test_getInvalidObjectId_raiseInvalidId(self) -> None:
         self.assertRaises(
-            ValueError,
+            InvalidId,
             self._repository.get_by_id,
             '73570wn3r1d'
         )
@@ -256,6 +272,7 @@ class TransactionRepositoryGetAllByTagTest(unittest.TestCase):
         self.assertListEqual(transactions_fun, test_transactions_fun)
 
 
+# TODO: !!! allowed fields !!!
 class TransactionRepositoryUpdateByIdTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
@@ -288,14 +305,13 @@ class TransactionRepositoryUpdateByIdTest(unittest.TestCase):
         TEST_TRANSACTION_CONN.local[TEST_TRANSACTION_COLLECTION].drop()
 
     def test_getInvalidTypeInput_raiseTypeError(self) -> None:
-        self.assertRaises(TypeError, self._repository.update_by_id, 3)
-        self.assertRaises(TypeError, self._repository.update_by_id, 3.14)
-        self.assertRaises(TypeError, self._repository.update_by_id, 'foo')
-        self.assertRaises(TypeError, self._repository.update_by_id, True)
+        self.assertRaises(TypeError, self._repository.update_by_id, 3, update_data={})
+        self.assertRaises(TypeError, self._repository.update_by_id, 3.14, update_data={})
+        self.assertRaises(TypeError, self._repository.update_by_id, True, update_data={})
 
-    def test_getInvalidObjectId_returnValueError(self) -> None:
+    def test_getInvalidObjectId_raiseInvalidId(self) -> None:
         self.assertRaises(
-            ValueError,
+            InvalidId,
             self._repository.update_by_id,
             id='73570wn3r1d',
             update_data={}
@@ -339,3 +355,137 @@ class TransactionRepositoryUpdateByIdTest(unittest.TestCase):
             updated_transaction,
             serialized_updated_test_transaction
         )
+
+
+class TransactionRepositoryDeleteByIdTest(unittest.TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        self._crud_service = CRUDService(
+            TEST_TRANSACTION_CONN,
+            TEST_TRANSACTION_COLLECTION
+        )
+        self._serializer = TransactionSerializer()
+
+        test_crud_engine = CRUDService(
+            TEST_TRANSACTION_CONN,
+            TEST_TRANSACTION_COLLECTION
+        )
+        test_serializer = TransactionSerializer()
+        self._repository = TransactionRepository(
+            test_crud_engine,
+            test_serializer
+        )
+
+        method = getattr(self, self._testMethodName)
+        tags = getattr(method, 'tags', {})
+        if 'empty_db' not in tags:
+            self._test_items_id = list(map(
+                lambda new_item: self._crud_service.create(new_item).inserted_id,
+                TEST_VALID_TRANSACTIONS
+            ))
+
+    def tearDown(self) -> None:
+        TEST_TRANSACTION_CONN.local[TEST_TRANSACTION_COLLECTION].drop()
+        return super().tearDown()
+
+    def test_getInvalidTypeInput_raiseInvalidId(self) -> None:
+        self.assertRaises(TypeError, self._repository.delete_by_id, 3)
+        self.assertRaises(TypeError, self._repository.delete_by_id, 3.14)
+        self.assertRaises(TypeError, self._repository.delete_by_id, True)
+
+    def test_getInvalidObjectId_raiseInvalidId(self) -> None:
+        self.assertRaises(
+            InvalidId,
+            self._repository.delete_by_id,
+            id='73570wn3r1d'
+        )
+
+    @tag('empty_db')
+    def test_getEmptyDb_returnEmptyDict(self) -> None:
+        deleted_transaction = self._repository.delete_by_id(
+            '61f5b2c4a3ed85c67a304e5e',
+        )
+        self.assertEqual(deleted_transaction, {})
+
+    def test_getNonExistsId_returnEmptyDict(self) -> None:
+        updated_transaction = self._repository.delete_by_id(
+            '61f5b2c4a3ed85c67a304e5e'
+        )
+        self.assertEqual(updated_transaction, {})
+
+    def test_getExistsId_deleteDataAndReturnSerializedDeletedData(self) -> None:
+        all_transaction_data = self._serializer.serialize_many(
+            self._crud_service.get_all()
+        )
+        target_transaction = all_transaction_data[0]
+        self.assertIn(target_transaction, all_transaction_data)
+        deleted_item = self._repository.delete_by_id(target_transaction['id'])
+        all_transaction_data_after = self._serializer.serialize_many(
+            self._crud_service.get_all()
+        )
+        self.assertEqual(target_transaction, deleted_item)
+        self.assertIn(deleted_item, all_transaction_data)
+        self.assertNotIn(deleted_item, all_transaction_data_after)
+        self.assertEqual(
+            len(all_transaction_data),
+            len(all_transaction_data_after) + 1
+        )
+
+
+class TransactionRepositoryCalculatePortfolioTest(unittest.TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        self._crud_service = CRUDService(
+            TEST_TRANSACTION_CONN,
+            TEST_TRANSACTION_COLLECTION
+        )
+        self._serializer = TransactionSerializer()
+
+        test_crud_engine = CRUDService(
+            TEST_TRANSACTION_CONN,
+            TEST_TRANSACTION_COLLECTION
+        )
+        test_serializer = TransactionSerializer()
+        self._repository = TransactionRepository(
+            test_crud_engine,
+            test_serializer
+        )
+
+        method = getattr(self, self._testMethodName)
+        tags = getattr(method, 'tags', {})
+        if 'empty_db' not in tags:
+            self._test_items_id = list(map(
+                lambda new_item: self._crud_service.create(new_item).inserted_id,
+                TEST_VALID_TRANSACTIONS
+            ))
+
+    def tearDown(self) -> None:
+        super().tearDown()
+        TEST_TRANSACTION_CONN.local[TEST_TRANSACTION_COLLECTION].drop()
+
+    @tag('empty_db')
+    def test_getEmptyDb_returnEmptyDict(self) -> None:
+        self.assertEqual(self._repository.calculate_portfolio(), {})
+
+    def test_getTestDb_returnCalculatedPortfolio(self) -> None:
+        portfolio = self._repository.calculate_portfolio()
+
+        self.assertAlmostEqual(
+            portfolio['investment'],
+            TEST_PORTFOLIO['investment']
+        )
+
+        for asset_data, test_asset_data \
+        in zip(portfolio['assets'].values(), TEST_PORTFOLIO['assets'].values()):
+            self.assertAlmostEqual(
+                asset_data['meta']['amount'],
+                test_asset_data['meta']['amount']
+            )
+            self.assertAlmostEqual(
+                asset_data['meta']['average_price'],
+                test_asset_data['meta']['average_price']
+            )
+            self.assertAlmostEqual(
+                asset_data['meta']['investment'],
+                test_asset_data['meta']['investment']
+            )
