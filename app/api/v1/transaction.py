@@ -7,6 +7,17 @@ from app.schemas.transaction import Transaction
 
 transaction_router = APIRouter(prefix='/api/v1/transactions')
 
+@transaction_router.get('', status_code=status.HTTP_200_OK)
+def get_all_transaction(
+    tag: Optional[str] = None,
+    asset: Optional[str] = None,
+    repository: TransactionRepository = Depends(get_transaction_repository)
+):
+    if asset:
+        return {'data': repository.get_all_by_asset(asset)}
+
+    return {'data': repository.get_all()}
+
 
 @transaction_router.post('', status_code=status.HTTP_201_CREATED)
 def create_new_transaction(
@@ -22,6 +33,13 @@ def create_new_transaction(
         )
 
     return stored_transaction
+
+
+@transaction_router.get('/portfolio', status_code=status.HTTP_200_OK)
+def calculate_portfolio(
+    repository: TransactionRepository = Depends(get_transaction_repository)
+):
+    return {'data': repository.calculate_portfolio()}
 
 
 @transaction_router.get('/{id}', status_code=status.HTTP_200_OK)
@@ -44,18 +62,6 @@ def get_transaction_by_id(
         )
 
     return lookup_transaction
-
-
-@transaction_router.get('', status_code=status.HTTP_200_OK)
-def get_all_transaction(
-    tag: Optional[str] = None,
-    asset: Optional[str] = None,
-    repository: TransactionRepository = Depends(get_transaction_repository)
-):
-    if asset:
-        return {'data': repository.get_all_by_asset(asset)}
-
-    return {'data': repository.get_all()}
 
 
 @transaction_router.delete('/{id}', status_code=status.HTTP_200_OK)

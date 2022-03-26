@@ -8,9 +8,10 @@ from pymongo import MongoClient
 from app.repositories.transaction import get_transaction_repository, get_test_transaction_repository
 from app.main import portfolio_service
 
-from tests.consts import     \
+from tests.consts import \
     TEST_VALID_TRANSACTIONS, \
-    TEST_INVALID_TRANSACTIONS
+    TEST_INVALID_TRANSACTIONS, \
+    TEST_PORTFOLIO
 
 
 TEST_VALID_TRANSACTIONS = deepcopy(TEST_VALID_TRANSACTIONS)
@@ -214,7 +215,7 @@ class APITransactionGetAllTest(unittest.TestCase):
             self.assertIn(transaction['id'], transaction_ids)
 
 
-class APITransactionDeleteById(unittest.TestCase):
+class APITransactionDeleteByIdTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         self._mongo_client = MongoClient()
@@ -271,4 +272,31 @@ class APITransactionDeleteById(unittest.TestCase):
         self.assertNotIn(
             response.json()['data']['id'],
             stored_transaction_ids
+        )
+
+
+class APITransactionCalculatePortfolioTest(unittest.TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        self._mongo_client = MongoClient()
+        for transaction in deepcopy(TEST_VALID_TRANSACTIONS):
+            self._mongo_client.local['test_api_transactions'].insert_one(transaction)
+
+        cursor = self._mongo_client.local['test_api_transactions'].find({})
+        self._inserted_transactions = [transaction for transaction in cursor]
+
+    def tearDown(self) -> None:
+        self._mongo_client.local['test_api_transactions'].drop()
+        return super().tearDown()
+
+    def test_getPortfolio_returnCalculatedPortfolio(self) -> None:
+        response = TEST_CLIENT.get(
+            '/api/v1/transactions/portfolio'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('data', response.json())
+        self.assertEqual(
+            response.json()['data']['investment'],
+            TEST_PORTFOLIO['investment']
         )
