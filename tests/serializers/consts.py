@@ -129,3 +129,31 @@ INVALID_TEST_TRANSACTIONS = [
         'foo': 9
     }
 ]
+
+
+VALID_TEST_USERS = [
+    {
+        '_id': ObjectId('61f5b2c4a3ed85c67a304e5e'),
+        'username': 'testuser',
+        'hashed_password': 'superstronghashedpassword'
+    }
+]
+
+
+INVALID_TEST_USERS = [
+    {
+        'foo': ObjectId('61f5b2c4a3ed85c67a304e5e'),
+        'username': 'testuser',
+        'hashed_password': 'superstronghashedpassword'
+    },
+    {
+        '_id': ObjectId('61f5b2c4a3ed85c67a304e5e'),
+        'foo': 'testuser',
+        'hashed_password': 'superstronghashedpassword'
+    },
+    {
+        '_id': ObjectId('61f5b2c4a3ed85c67a304e5e'),
+        'username': 'testuser',
+        'foo': 'superstronghashedpassword'
+    }
+]

@@ -215,6 +215,11 @@ class APITransactionGetAllTest(unittest.TestCase):
             self.assertIn(transaction['id'], transaction_ids)
 
 
+# TODO: !! after allowed fields !!
+class APITransactionUpdateByIdTest(unittest.TestCase):
+    pass
+
+
 class APITransactionDeleteByIdTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
