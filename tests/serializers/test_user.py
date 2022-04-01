@@ -42,6 +42,7 @@ class UserSerializerOneTest(unittest.TestCase):
         self.assertEqual(
             {
                 'id': '61f5b2c4a3ed85c67a304e5e',
+                'hashed_password': 'superstronghashedpassword',
                 'username': 'testuser',
             },
             serialized_user_data

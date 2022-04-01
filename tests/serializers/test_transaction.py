@@ -1,8 +1,14 @@
 import unittest
+
+from copy import deepcopy
 from datetime import datetime
 
 from app.serializers.transaction import TransactionSerializer
 from tests.serializers.consts import INVALID_TEST_TRANSACTIONS, VALID_TEST_TRANSACTIONS
+
+
+VALID_TEST_TRANSACTIONS = deepcopy(VALID_TEST_TRANSACTIONS)
+INVALID_TEST_TRANSACTIONS = deepcopy(INVALID_TEST_TRANSACTIONS)
 
 
 class TransactionSerializerOneTest(unittest.TestCase):

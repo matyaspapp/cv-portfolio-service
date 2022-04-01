@@ -15,5 +15,6 @@ class UserSerializer:
 
         return {
             'id': str(user['_id']),
+            'hashed_password': user['hashed_password'],
             'username': user['username']
         }

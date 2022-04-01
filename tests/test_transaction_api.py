@@ -26,8 +26,8 @@ TEST_CLIENT = TestClient(portfolio_service)
 
 class APITransactionCreateTest(unittest.TestCase):
     def setUp(self) -> None:
-        self._mongo_client = MongoClient()
         super().setUp()
+        self._mongo_client = MongoClient()
 
     def tearDown(self) -> None:
         self._mongo_client.local['test_api_transactions'].drop()

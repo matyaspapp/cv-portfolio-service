@@ -1,5 +1,3 @@
-from contextlib import AsyncExitStack
-from pprint import pprint
 import unittest
 
 from bson import ObjectId
@@ -40,7 +38,7 @@ class TransactionRepositoryCreateTest(unittest.TestCase):
             TEST_TRANSACTION_COLLECTION
         )
         test_serializer = TransactionSerializer()
-        self._service = TransactionRepository(test_crud_engine, test_serializer)
+        self._repository = TransactionRepository(test_crud_engine, test_serializer)
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -49,28 +47,27 @@ class TransactionRepositoryCreateTest(unittest.TestCase):
     def test_getWrongSizeTransactionData_raiseValueError(self) -> None:
         self.assertRaises(
             ValueError,
-            self._service.create,
+            self._repository.create,
             {'foo': 'bar'}
         )
 
     def test_getWrongOwnerObjectId_raiseInvalidId(self) -> None:
         self.assertRaises(
             InvalidId,
-            self._service.create,
+            self._repository.create,
             TEST_INVALID_TRANSACTIONS[0]
         )
 
     def test_getWrongDictKeys_raiseValueError(self) -> None:
         self.assertRaises(
             ValueError,
-            self._service.create,
+            self._repository.create,
             TEST_INVALID_TRANSACTIONS[1]
         )
 
     def test_getValidTransactionData_returnSerializedData(self) -> None:
         test_transaction = TEST_VALID_TRANSACTIONS[0]
-        print(TEST_VALID_TRANSACTIONS)
-        new_serialized_transaction = self._service.create(test_transaction)
+        new_serialized_transaction = self._repository.create(test_transaction)
         test_transaction['_id'] = ObjectId(new_serialized_transaction['id'])
         test_serialized_transaction = self._serializer.serialize_one(test_transaction)
         self.assertEqual(test_serialized_transaction, new_serialized_transaction)

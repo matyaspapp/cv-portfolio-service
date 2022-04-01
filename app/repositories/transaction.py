@@ -1,8 +1,7 @@
-from typing import Type
 from bson import ObjectId
 from bson.errors import InvalidId
+from pymongo import MongoClient
 
-from app.database.connection import conn
 from app.database.service import CRUDService
 from app.schemas.transaction import Transaction
 from app.serializers.transaction import TransactionSerializer
@@ -19,7 +18,6 @@ class TransactionRepository:
 
     def create(self, new_transaction: Transaction) -> str:
         new_transaction_dict = dict(new_transaction)
-        print("CREATE:", new_transaction)
         if len(new_transaction_dict) != 8:
             raise ValueError
 
@@ -155,7 +153,8 @@ class TransactionRepository:
 
 
 def get_transaction_repository():  # pragma: no cover
-    crud_service = CRUDService(conn, 'transactions')
+    connection = MongoClient()
+    crud_service = CRUDService(connection, 'transactions')
     repository = TransactionRepository(
         crud_service,
         TransactionSerializer
@@ -164,7 +163,8 @@ def get_transaction_repository():  # pragma: no cover
 
 
 def get_test_transaction_repository():  # pragma: no cover
-    crud_service = CRUDService(conn, 'test_api_transactions')
+    connection = MongoClient()
+    crud_service = CRUDService(connection, 'test_api_transactions')
     test_repository = TransactionRepository(
         crud_service,
         TransactionSerializer

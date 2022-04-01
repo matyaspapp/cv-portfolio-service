@@ -1,6 +1,25 @@
 from datetime import datetime
 
 
+TEST_VALID_USERS = [
+    {
+        'username': 'testuser',
+        'hashed_password':  'supersecrethashedpassword'
+    },
+]
+
+TEST_INVALID_USERS = [
+    {
+        'username': 'testuser',
+        'foo': 'bar'
+    },
+    {
+        'username': 'testuser',
+        'hashed_password': ''
+    },
+]
+
+
 TEST_VALID_TRANSACTIONS = [
     {
         'owner_id': 'e5e403a76c58de3a4c2b5f16',

@@ -2,6 +2,8 @@ fastapi
 uvicorn
 pymongo
 requests
+pyjwt
+python-multipart
 
 # testing
 pytest

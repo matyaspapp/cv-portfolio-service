@@ -7,6 +7,7 @@ from app.schemas.transaction import Transaction
 
 transaction_router = APIRouter(prefix='/api/v1/transactions')
 
+
 @transaction_router.get('', status_code=status.HTTP_200_OK)
 def get_all_transaction(
     tag: Optional[str] = None,
