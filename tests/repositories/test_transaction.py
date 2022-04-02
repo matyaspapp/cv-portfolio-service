@@ -20,13 +20,13 @@ from tests.repositories.settings import \
 from tests.utils import tag
 
 
-TEST_VALID_TRANSACTIONS = deepcopy(TEST_VALID_TRANSACTIONS)
-TEST_INVALID_TRANSACTIONS = deepcopy(TEST_INVALID_TRANSACTIONS)
-
-
 class TransactionRepositoryCreateTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+
+        self._TEST_VALID_TRANSACTIONS = deepcopy(TEST_VALID_TRANSACTIONS)
+        self._TEST_INVALID_TRANSACTIONS = deepcopy(TEST_INVALID_TRANSACTIONS)
+
         self._crud_service = CRUDService(
             TEST_TRANSACTION_CONN,
             TEST_TRANSACTION_COLLECTION
@@ -52,21 +52,23 @@ class TransactionRepositoryCreateTest(unittest.TestCase):
         )
 
     def test_getWrongOwnerObjectId_raiseInvalidId(self) -> None:
+        test_transaction = self._TEST_INVALID_TRANSACTIONS[0]
         self.assertRaises(
             InvalidId,
             self._repository.create,
-            TEST_INVALID_TRANSACTIONS[0]
+            test_transaction
         )
 
     def test_getWrongDictKeys_raiseValueError(self) -> None:
+        test_transaction = self._TEST_INVALID_TRANSACTIONS[1]
         self.assertRaises(
             ValueError,
             self._repository.create,
-            TEST_INVALID_TRANSACTIONS[1]
+            test_transaction
         )
 
     def test_getValidTransactionData_returnSerializedData(self) -> None:
-        test_transaction = TEST_VALID_TRANSACTIONS[0]
+        test_transaction = self._TEST_VALID_TRANSACTIONS[0]
         new_serialized_transaction = self._repository.create(test_transaction)
         test_transaction['_id'] = ObjectId(new_serialized_transaction['id'])
         test_serialized_transaction = self._serializer.serialize_one(test_transaction)
@@ -76,6 +78,7 @@ class TransactionRepositoryCreateTest(unittest.TestCase):
 class TransactionRepositoryGetByIdTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+
         self._crud_service = CRUDService(
             TEST_TRANSACTION_CONN,
             TEST_TRANSACTION_COLLECTION
