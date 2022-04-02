@@ -52,6 +52,26 @@ class APIUserCreateTest(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()['username'], test_user['username'])
 
+    def test_getExistsUsername_returnHTTP400(self) -> None:
+        test_user = self._TEST_VALID_USERS[0]
+        response_first = TEST_CLIENT.post(
+            '/api/v1/users',
+            json=test_user
+        )
+
+        response_second = TEST_CLIENT.post(
+            '/api/v1/users',
+            json=test_user
+        )
+
+        self.assertEqual(response_first.status_code, 201)
+        self.assertEqual(response_second.status_code, 400)
+        self.assertIn('detail', response_second.json())
+        self.assertEqual(
+            response_second.json()['detail'],
+            'This username is already taken..'
+        )
+
 
 class APIUserAuthTest(unittest.TestCase):
     def setUp(self) -> None:

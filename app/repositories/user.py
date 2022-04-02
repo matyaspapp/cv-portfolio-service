@@ -50,6 +50,39 @@ class UserRepository:
 
         return {'authenticated': True, 'user': lookup_user}
 
+    def update_by_username(self, username: str, updated_data: dict) -> dict:
+        if not isinstance(username, str):
+            raise TypeError
+
+        db_user = self.get_by_username(username)
+        if not db_user:
+            return {}
+
+        update_result = self._crud_service.update_by_id(
+            db_user['id'],
+            **updated_data
+        )
+
+        return self._serializer.serialize_one(
+            self._crud_service.get_by_id(db_user['id'])
+        )
+
+
+    def delete_by_username(self, username: str) -> dict:
+        if not isinstance(username, str):
+            raise TypeError
+
+        try:
+            target_user, = self._crud_service.get_all_by_key('username', username)
+        except:
+            return {}
+
+        self._crud_service.delete_by_id(target_user['_id'])
+
+        return self._serializer.serialize_one(
+            target_user
+        )
+
     @staticmethod
     def generate_jwt_token(user_data: dict, jwt_secret: str = 'SECRETKEY') -> dict:
         if not isinstance(user_data, dict):

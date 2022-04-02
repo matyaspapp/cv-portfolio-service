@@ -6,6 +6,10 @@ TEST_VALID_USERS = [
         'username': 'testuser',
         'hashed_password':  'supersecrethashedpassword'
     },
+    {
+        'username': 'testuser2',
+        'hashed_password':  'supersecrethashedpasswordagain'
+    },
 ]
 
 TEST_INVALID_USERS = [

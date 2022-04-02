@@ -11,10 +11,6 @@ oauth2_schema = OAuth2PasswordBearer(tokenUrl='/api/v1/users/auth')
 user_router = APIRouter(prefix='/api/v1/users')
 
 
-def _get_current_token(token: str = Depends(oauth2_schema)):
-    return 'ehh'
-
-
 @user_router.post(
     '',
     response_model=UserResponse,
@@ -24,7 +20,13 @@ def create_new_user(
     new_user: User,
     repository: UserRepository = Depends(get_user_repository)
 ):
-    print('NEW', new_user)
+    db_user = repository.get_by_username(new_user.username)
+    if db_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='This username is already taken..'
+        )
+
     try:
         stored_user = repository.create(new_user)
     except:

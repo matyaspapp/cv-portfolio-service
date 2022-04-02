@@ -204,6 +204,10 @@ class UserRepositoryCreateJWTTokenTest(unittest.TestCase):
         test_serializer = UserSerializer()
         self._repository = UserRepository(test_crud_engine, test_serializer)
 
+    def tearDown(self) -> None:
+        super().tearDown()
+        TEST_USER_CONN.local[TEST_USER_COLLECTION].drop()
+
     def test_getWrongTypePayload_raiseTypeError(self) -> None:
         self.assertRaises(TypeError, self._repository.generate_jwt_token, 3)
         self.assertRaises(TypeError, self._repository.generate_jwt_token, 3.14)
@@ -339,10 +343,161 @@ class UserRepositoryVerifyJWTTokenTest(unittest.TestCase):
         )
 
 
-# TODO:
-# class UserRepositoryUpdateByUsernameTest(unittest.TestCase):
-#     pass
+# TODO: !!! allowed fields !!!
+class UserRepositoryUpdateByUsernameTest(unittest.TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self._TEST_VALID_USERS = deepcopy(TEST_VALID_USERS)
+        self._TEST_INVALID_USERS = deepcopy(TEST_INVALID_USERS)
+
+        self._crud_service = CRUDService(
+            TEST_USER_CONN,
+            TEST_USER_COLLECTION
+        )
+        self._serializer = UserSerializer()
+
+        test_crud_engine = CRUDService(
+            TEST_USER_CONN,
+            TEST_USER_COLLECTION
+        )
+        test_serializer = UserSerializer()
+        self._repository = UserRepository(test_crud_engine, test_serializer)
+
+        method = getattr(self, self._testMethodName)
+        tags = getattr(method, 'tags', {})
+        if 'empty_db' not in tags:
+            for user in self._TEST_VALID_USERS:
+                self._crud_service.create(user)
+
+    def tearDown(self) -> None:
+        super().tearDown()
+        TEST_USER_CONN.local[TEST_USER_COLLECTION].drop()
+
+    def test_getInvalidTypeInput_raiseTypeError(self) -> None:
+        self.assertRaises(
+            TypeError,
+            self._repository.update_by_username,
+            3, update_data={}
+        )
+        self.assertRaises(
+            TypeError,
+            self._repository.update_by_username,
+            3.14, update_data={}
+        )
+        self.assertRaises(
+            TypeError,
+            self._repository.update_by_username,
+            True, update_data={}
+        )
+
+    @tag('empty_db')
+    def test_getEmptyDb_returnEmptyDict(self) -> None:
+        test_user = self._TEST_VALID_USERS[0]
+        updated_user = self._repository.update_by_username(
+            test_user['username'],
+            {}
+        )
+
+        self.assertEqual(updated_user, {})
+
+    def test_getNonExistsUsername_returnEmptyDict(self) -> None:
+        updated_user = self._repository.update_by_username(
+            'thisuserisnotexists',
+            {}
+        )
+
+        self.assertEqual(updated_user, {})
+
+    def test_getExistsUsername_returnUpdatedSerializedData(self) -> None:
+        test_user = self._TEST_VALID_USERS[0]
+        updated_user = self._repository.update_by_username(
+            test_user['username'],
+            {'username': 'updatedtestuser'}
+        )
+
+        serialized_updated_test_user = self._serializer.serialize_one(
+            self._crud_service.get_by_id(updated_user['id'])
+        )
+
+        self.assertEqual(
+            updated_user,
+            serialized_updated_test_user
+        )
 
 
-# class UserRepositoryDeleteByUsernameTest(unittest.TestCase):
-#     pass
+class UserRepositoryDeleteByUsernameTest(unittest.TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self._TEST_VALID_USERS = deepcopy(TEST_VALID_USERS)
+        self._TEST_INVALID_USERS = deepcopy(TEST_INVALID_USERS)
+
+        self._crud_service = CRUDService(
+            TEST_USER_CONN,
+            TEST_USER_COLLECTION
+        )
+        self._serializer = UserSerializer()
+
+        test_crud_engine = CRUDService(
+            TEST_USER_CONN,
+            TEST_USER_COLLECTION
+        )
+        test_serializer = UserSerializer()
+        self._repository = UserRepository(test_crud_engine, test_serializer)
+
+        method = getattr(self, self._testMethodName)
+        tags = getattr(method, 'tags', {})
+        if 'empty_db' not in tags:
+            for user in self._TEST_VALID_USERS:
+                self._crud_service.create(user)
+
+    def tearDown(self) -> None:
+        super().tearDown()
+        TEST_USER_CONN.local[TEST_USER_COLLECTION].drop()
+
+    def test_getInvalidTypeInput_raiseTypeError(self) -> None:
+        self.assertRaises(TypeError, self._repository.delete_by_username, 3)
+        self.assertRaises(TypeError, self._repository.delete_by_username, 3.14)
+        self.assertRaises(TypeError, self._repository.delete_by_username, True)
+
+    @tag('empty_db')
+    def test_getEmptyDb_returnEmptyDict(self) -> None:
+        test_user = self._TEST_VALID_USERS[0]
+        deleted_user = self._repository.delete_by_username(test_user['username'])
+
+        self.assertEqual(deleted_user, {})
+
+    def test_getNonExistsUsername_returnEmptyDict(self) -> None:
+        test_username = 'thisuserisnotexists'
+        deleted_user = self._repository.delete_by_username(test_username)
+
+        db_users = self._crud_service.get_all()
+
+        self.assertEqual(len(db_users), 2)
+        self.assertNotIn(
+            test_username,
+            list(map(lambda user: user['username'], db_users))
+        )
+        self.assertEqual(deleted_user, {})
+
+    def test_getExistsUsername_deleteDataAndReturnSerializedDeletedData(self) -> None:
+        all_user = list(map(
+            self._serializer.serialize_one,
+            self._crud_service.get_all() 
+        ))
+
+        target_user = all_user[0]
+        deleted_user = self._repository.delete_by_username(
+            target_user['username']
+        )
+
+        all_user_after = list(map(
+            self._serializer.serialize_one,
+            self._crud_service.get_all()
+        ))
+
+        self.assertEqual(target_user, deleted_user)
+        self.assertIn(deleted_user, all_user)
+        self.assertNotIn(deleted_user, all_user_after)
+        self.assertEqual(len(all_user), len(all_user_after) + 1)

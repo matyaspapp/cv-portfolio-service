@@ -216,8 +216,8 @@ class APITransactionGetAllTest(unittest.TestCase):
 
 
 # TODO: !! after allowed fields !!
-class APITransactionUpdateByIdTest(unittest.TestCase):
-    pass
+# class APITransactionUpdateByIdTest(unittest.TestCase):
+#     pass
 
 
 class APITransactionDeleteByIdTest(unittest.TestCase):

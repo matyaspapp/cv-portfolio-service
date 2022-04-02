@@ -302,9 +302,21 @@ class TransactionRepositoryUpdateByIdTest(unittest.TestCase):
         TEST_TRANSACTION_CONN.local[TEST_TRANSACTION_COLLECTION].drop()
 
     def test_getInvalidTypeInput_raiseTypeError(self) -> None:
-        self.assertRaises(TypeError, self._repository.update_by_id, 3, update_data={})
-        self.assertRaises(TypeError, self._repository.update_by_id, 3.14, update_data={})
-        self.assertRaises(TypeError, self._repository.update_by_id, True, update_data={})
+        self.assertRaises(
+            TypeError,
+            self._repository.update_by_id,
+            3, update_data={}
+        )
+        self.assertRaises(
+            TypeError,
+            self._repository.update_by_id,
+            3.14, update_data={}
+        )
+        self.assertRaises(
+            TypeError,
+            self._repository.update_by_id,
+            True, update_data={}
+        )
 
     def test_getInvalidObjectId_raiseInvalidId(self) -> None:
         self.assertRaises(
@@ -385,7 +397,7 @@ class TransactionRepositoryDeleteByIdTest(unittest.TestCase):
         TEST_TRANSACTION_CONN.local[TEST_TRANSACTION_COLLECTION].drop()
         return super().tearDown()
 
-    def test_getInvalidTypeInput_raiseInvalidId(self) -> None:
+    def test_getInvalidTypeInput_raiseTypeError(self) -> None:
         self.assertRaises(TypeError, self._repository.delete_by_id, 3)
         self.assertRaises(TypeError, self._repository.delete_by_id, 3.14)
         self.assertRaises(TypeError, self._repository.delete_by_id, True)
@@ -415,7 +427,6 @@ class TransactionRepositoryDeleteByIdTest(unittest.TestCase):
             self._crud_service.get_all()
         )
         target_transaction = all_transaction_data[0]
-        self.assertIn(target_transaction, all_transaction_data)
         deleted_item = self._repository.delete_by_id(target_transaction['id'])
         all_transaction_data_after = self._serializer.serialize_many(
             self._crud_service.get_all()
