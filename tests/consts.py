@@ -1,6 +1,34 @@
 from datetime import datetime
 
 
+TEST_VALID_WALLETS = [
+    {
+        'owner_id': 'e5e403a76c58de3a4c2b5f16',
+        'address': 'testwalletaddress1',
+        'chain': 'testchain1'
+    },
+    {
+        'owner_id': '61f5b2c4a3ed85c67a304e5e',
+        'address': 'testwalletaddress',
+        'chain': 'testchain'
+    }
+]
+
+
+TEST_INVALID_WALLETS = [
+    {
+        'owner_id': '73570wn3r1d',
+        'address': 'testwalletaddress1',
+        'chain': 'testchain'
+    },
+    {
+        'owner_id': 'e5e403a76c58de3a4c2b5f16',
+        'address': 'testwalletaddress1',
+        'foo': 'bar'
+    }
+]
+
+
 TEST_VALID_USERS = [
     {
         'username': 'testuser',

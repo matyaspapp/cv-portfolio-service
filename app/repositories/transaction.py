@@ -1,4 +1,3 @@
-import datetime
 from bson import ObjectId
 from bson.errors import InvalidId
 from pymongo import MongoClient
@@ -17,7 +16,7 @@ class TransactionRepository:
         self._crud_service = crud_service
         self._serializer = serializer
 
-    def create(self, new_transaction: Transaction) -> str:
+    def create(self, new_transaction: Transaction | dict) -> dict:
         new_transaction_dict = dict(new_transaction)
         if len(new_transaction_dict) != 8:
             raise ValueError

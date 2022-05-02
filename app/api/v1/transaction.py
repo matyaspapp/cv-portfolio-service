@@ -3,7 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.v1.user import get_current_user
 
-from app.repositories.transaction import TransactionRepository, get_transaction_repository
+from app.repositories.transaction import \
+    TransactionRepository, \
+    get_transaction_repository
 from app.schemas.transaction import Transaction
 
 

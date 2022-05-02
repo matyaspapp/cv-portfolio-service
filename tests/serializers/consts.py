@@ -2,6 +2,50 @@ from bson import ObjectId
 from datetime import datetime
 
 
+VALID_TEST_WALLETS = [
+    {
+        '_id': ObjectId('61f5b2c4a3ed85c67a304e5e'),
+        'owner_id': ObjectId('e5e403a76c58de3a4c2b5f16'),
+        'address': 'testwalletaddress',
+        'chain': 'testchain'
+    },
+    {
+        '_id': ObjectId('e5e403a76c58de3a4c2b5f16'),
+        'owner_id': ObjectId('61f5b2c4a3ed85c67a304e5e'),
+        'address': 'testwalletaddress',
+        'chain': 'testchain'
+    }
+]
+
+
+INVALID_TEST_WALLETS = [
+    {
+        'foo': ObjectId('61f5b2c4a3ed85c67a304e5e'),
+        'owner_id': ObjectId('e5e403a76c58de3a4c2b5f16'),
+        'address': 'testwalletaddress',
+        'chain': 'testchain'
+    },
+    {
+        '_id': ObjectId('e5e403a76c58de3a4c2b5f16'),
+        'foo': ObjectId('61f5b2c4a3ed85c67a304e5e'),
+        'address': 'testwalletaddress',
+        'chain': 'testchain'
+    },
+    {
+        '_id': ObjectId('61f5b2c4a3ed85c67a304e5e'),
+        'owner_id': ObjectId('e5e403a76c58de3a4c2b5f16'),
+        'foo': 'testwalletaddress',
+        'chain': 'testchain'
+    },
+    {
+        '_id': ObjectId('e5e403a76c58de3a4c2b5f16'),
+        'owner_id': ObjectId('61f5b2c4a3ed85c67a304e5e'),
+        'address': 'testwalletaddress',
+        'foo': 'testchain'
+    }
+]
+
+
 VALID_TEST_TRANSACTIONS = [
     {
         '_id': ObjectId('61f5b2c4a3ed85c67a304e5e'),
@@ -24,7 +68,7 @@ VALID_TEST_TRANSACTIONS = [
         'tags': [],
         'date': datetime(2022, 2, 4),
         'type': 'buy'
-    }
+    },
 ]
 
 

@@ -5,17 +5,16 @@ from copy import deepcopy
 from fastapi.testclient import TestClient
 from pymongo import MongoClient
 
-from app.repositories.transaction import get_transaction_repository, get_test_transaction_repository
+from app.repositories.transaction import \
+    get_transaction_repository, \
+    get_test_transaction_repository
+
 from app.main import portfolio_service
 
 from tests.consts import \
     TEST_VALID_TRANSACTIONS, \
     TEST_INVALID_TRANSACTIONS, \
     TEST_PORTFOLIO
-
-
-TEST_VALID_TRANSACTIONS = deepcopy(TEST_VALID_TRANSACTIONS)
-TEST_INVALID_TRANSACTIONS = deepcopy(TEST_INVALID_TRANSACTIONS)
 
 
 portfolio_service.dependency_overrides[get_transaction_repository] = \
@@ -27,6 +26,10 @@ TEST_CLIENT = TestClient(portfolio_service)
 class APITransactionCreateTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+
+        self._TEST_VALID_TRANSACTIONS = deepcopy(TEST_VALID_TRANSACTIONS)
+        self._TEST_INVALID_TRANSACTIONS = deepcopy(TEST_INVALID_TRANSACTIONS)
+
         self._mongo_client = MongoClient()
 
     def tearDown(self) -> None:
@@ -36,7 +39,7 @@ class APITransactionCreateTest(unittest.TestCase):
     def test_getInvalidTransactionData_returnHTTP400(self) -> None:
         response = TEST_CLIENT.post(
             '/api/v1/transactions',
-            json=TEST_INVALID_TRANSACTIONS[0]
+            json=self._TEST_INVALID_TRANSACTIONS[0]
         )
 
         self.assertEqual(response.status_code, 400)
@@ -49,7 +52,7 @@ class APITransactionCreateTest(unittest.TestCase):
     def test_getDeficientTransactionData_returnHTTP422(self) -> None:
         response = TEST_CLIENT.post(
             '/api/v1/transactions',
-            json=TEST_INVALID_TRANSACTIONS[1]
+            json=self._TEST_INVALID_TRANSACTIONS[1]
         )
 
         self.assertEqual(response.status_code, 422)
@@ -58,7 +61,7 @@ class APITransactionCreateTest(unittest.TestCase):
     def test_getValidTransactionData_returnHTTP201WithStoredData(self) -> None:
         response = TEST_CLIENT.post(
             '/api/v1/transactions',
-            json=TEST_VALID_TRANSACTIONS[0]
+            json=self._TEST_VALID_TRANSACTIONS[0]
         )
 
         self.assertEqual(response.status_code, 201)
@@ -68,13 +71,14 @@ class APITransactionCreateTest(unittest.TestCase):
                                        if k != 'id'}
         self.assertEqual(
             transaction_data_wo_id,
-            TEST_VALID_TRANSACTIONS[0]
+            self._TEST_VALID_TRANSACTIONS[0]
         )
 
 
 class APITransactionGetByIdTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+
         self._mongo_client = MongoClient()
         for transaction in deepcopy(TEST_VALID_TRANSACTIONS):
             self._mongo_client.local['test_api_transactions'].insert_one(transaction)

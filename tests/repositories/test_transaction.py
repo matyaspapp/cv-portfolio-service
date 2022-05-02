@@ -79,6 +79,9 @@ class TransactionRepositoryGetByIdTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
 
+        self._TEST_VALID_TRANSACTIONS = deepcopy(TEST_VALID_TRANSACTIONS)
+        self._TEST_INVALID_TRANSACTIONS = deepcopy(TEST_INVALID_TRANSACTIONS)
+
         self._crud_service = CRUDService(
             TEST_TRANSACTION_CONN,
             TEST_TRANSACTION_COLLECTION
@@ -91,7 +94,9 @@ class TransactionRepositoryGetByIdTest(unittest.TestCase):
         )
         test_serializer = TransactionSerializer()
         self._repository = TransactionRepository(test_crud_engine, test_serializer)
-        self._crud_service.create(TEST_VALID_TRANSACTIONS[0])
+        self._inserted_transaction_id = str(self._crud_service.create(
+            self._TEST_VALID_TRANSACTIONS[0]
+        ).inserted_id)
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -105,20 +110,25 @@ class TransactionRepositoryGetByIdTest(unittest.TestCase):
         )
 
     def test_getNonExistsId_returnEmptyDict(self) -> None:
-        transaction = self._repository.get_by_id('61f5b2c4a3ed85c67a304e5e')
+        transaction = self._repository.get_by_id(
+            self._inserted_transaction_id[::-1]
+        )
         self.assertDictEqual(transaction, {})
 
     def test_getExistsId_returnSerializedDict(self) -> None:
         test_transaction, = self._crud_service.get_all()
         test_transaction = self._serializer.serialize_one(test_transaction)
         transaction = self._repository.get_by_id(test_transaction['id'])
-        self.assertDictEqual(transaction, test_transaction
-)
+        self.assertDictEqual(transaction, test_transaction)
 
 
 class TransactionRepositoryGetAllTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+
+        self._TEST_VALID_TRANSACTIONS = deepcopy(TEST_VALID_TRANSACTIONS)
+        self._TEST_INVALID_TRANSACTIONS = deepcopy(TEST_INVALID_TRANSACTIONS)
+
         self._crud_service = CRUDService(
             TEST_TRANSACTION_CONN,
             TEST_TRANSACTION_COLLECTION
@@ -135,8 +145,8 @@ class TransactionRepositoryGetAllTest(unittest.TestCase):
         method = getattr(self, self._testMethodName)
         tags = getattr(method, 'tags', {})
         if 'empty_db' not in tags:
-            self._crud_service.create(TEST_VALID_TRANSACTIONS[0])
-            self._crud_service.create(TEST_VALID_TRANSACTIONS[1])
+            self._crud_service.create(self._TEST_VALID_TRANSACTIONS[0])
+            self._crud_service.create(self._TEST_VALID_TRANSACTIONS[1])
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -157,6 +167,10 @@ class TransactionRepositoryGetAllTest(unittest.TestCase):
 class TransactionRepositoryGetAllByAssetTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+
+        self._TEST_VALID_TRANSACTIONS = deepcopy(TEST_VALID_TRANSACTIONS)
+        self._TEST_INVALID_TRANSACTIONS = deepcopy(TEST_INVALID_TRANSACTIONS)
+
         self._crud_service = CRUDService(
             TEST_TRANSACTION_CONN,
             TEST_TRANSACTION_COLLECTION
@@ -178,7 +192,7 @@ class TransactionRepositoryGetAllByAssetTest(unittest.TestCase):
         if 'empty_db' not in tags:
             self._test_items_id = list(map(
                 lambda new_item: self._crud_service.create(new_item).inserted_id,
-                TEST_VALID_TRANSACTIONS
+                self._TEST_VALID_TRANSACTIONS
             ))
 
     def tearDown(self) -> None:
@@ -216,6 +230,10 @@ class TransactionRepositoryGetAllByAssetTest(unittest.TestCase):
 class TransactionRepositoryGetAllByTagTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+
+        self._TEST_VALID_TRANSACTIONS = deepcopy(TEST_VALID_TRANSACTIONS)
+        self._TEST_INVALID_TRANSACTIONS = deepcopy(TEST_INVALID_TRANSACTIONS)
+
         self._crud_service = CRUDService(
             TEST_TRANSACTION_CONN,
             TEST_TRANSACTION_COLLECTION
@@ -237,7 +255,7 @@ class TransactionRepositoryGetAllByTagTest(unittest.TestCase):
         if 'empty_db' not in tags:
             self._test_items_id = list(map(
                 lambda new_item: self._crud_service.create(new_item).inserted_id,
-                TEST_VALID_TRANSACTIONS
+                self._TEST_VALID_TRANSACTIONS
             ))
 
     def tearDown(self) -> None:
@@ -272,10 +290,13 @@ class TransactionRepositoryGetAllByTagTest(unittest.TestCase):
         self.assertListEqual(transactions_fun, test_transactions_fun)
 
 
-# TODO: !!! allowed fields !!!
 class TransactionRepositoryUpdateByIdTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+
+        self._TEST_VALID_TRANSACTIONS = deepcopy(TEST_VALID_TRANSACTIONS)
+        self._TEST_INVALID_TRANSACTIONS = deepcopy(TEST_INVALID_TRANSACTIONS)
+
         self._crud_service = CRUDService(
             TEST_TRANSACTION_CONN,
             TEST_TRANSACTION_COLLECTION
@@ -297,7 +318,7 @@ class TransactionRepositoryUpdateByIdTest(unittest.TestCase):
         if 'empty_db' not in tags:
             self._test_items_id = list(map(
                 lambda new_item: self._crud_service.create(new_item).inserted_id,
-                TEST_VALID_TRANSACTIONS
+                self._TEST_VALID_TRANSACTIONS
             ))
 
     def tearDown(self) -> None:
@@ -372,6 +393,10 @@ class TransactionRepositoryUpdateByIdTest(unittest.TestCase):
 class TransactionRepositoryDeleteByIdTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+
+        self._TEST_VALID_TRANSACTIONS = deepcopy(TEST_VALID_TRANSACTIONS)
+        self._TEST_INVALID_TRANSACTIONS = deepcopy(TEST_INVALID_TRANSACTIONS)
+
         self._crud_service = CRUDService(
             TEST_TRANSACTION_CONN,
             TEST_TRANSACTION_COLLECTION
@@ -393,7 +418,7 @@ class TransactionRepositoryDeleteByIdTest(unittest.TestCase):
         if 'empty_db' not in tags:
             self._test_items_id = list(map(
                 lambda new_item: self._crud_service.create(new_item).inserted_id,
-                TEST_VALID_TRANSACTIONS
+                self._TEST_VALID_TRANSACTIONS
             ))
 
     def tearDown(self) -> None:
@@ -420,10 +445,10 @@ class TransactionRepositoryDeleteByIdTest(unittest.TestCase):
         self.assertEqual(deleted_transaction, {})
 
     def test_getNonExistsId_returnEmptyDict(self) -> None:
-        updated_transaction = self._repository.delete_by_id(
+        deleted_transaction = self._repository.delete_by_id(
             '61f5b2c4a3ed85c67a304e5e'
         )
-        self.assertEqual(updated_transaction, {})
+        self.assertEqual(deleted_transaction, {})
 
     def test_getExistsId_deleteDataAndReturnSerializedDeletedData(self) -> None:
         all_transaction_data = self._serializer.serialize_many(
@@ -446,6 +471,10 @@ class TransactionRepositoryDeleteByIdTest(unittest.TestCase):
 class TransactionRepositoryCalculatePortfolioTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
+
+        self._TEST_VALID_TRANSACTIONS = deepcopy(TEST_VALID_TRANSACTIONS)
+        self._TEST_INVALID_TRANSACTIONS = deepcopy(TEST_INVALID_TRANSACTIONS)
+
         self._crud_service = CRUDService(
             TEST_TRANSACTION_CONN,
             TEST_TRANSACTION_COLLECTION
@@ -467,7 +496,7 @@ class TransactionRepositoryCalculatePortfolioTest(unittest.TestCase):
         if 'empty_db' not in tags:
             self._test_items_id = list(map(
                 lambda new_item: self._crud_service.create(new_item).inserted_id,
-                TEST_VALID_TRANSACTIONS
+                self._TEST_VALID_TRANSACTIONS
             ))
 
     def tearDown(self) -> None:
