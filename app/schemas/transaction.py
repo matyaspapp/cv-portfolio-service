@@ -9,5 +9,5 @@ class Transaction(BaseModel):
     historical_price: float
     currency: str
     tags: list[str]
-    date: datetime
+    date: str
     type: str

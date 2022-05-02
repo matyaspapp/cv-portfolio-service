@@ -13,7 +13,6 @@ user_router = APIRouter(prefix='/api/v1/users')
 
 @user_router.post(
     '',
-    response_model=UserResponse,
     status_code=status.HTTP_201_CREATED
 )
 def create_new_user(
@@ -35,7 +34,7 @@ def create_new_user(
             detail='Invalid user data..'
         )
 
-    return stored_user
+    return repository.generate_jwt_token(stored_user)
 
 
 @user_router.post(
@@ -69,5 +68,10 @@ def get_current_user(
     repository: UserRepository = Depends(get_user_repository)
 ):
     payload = repository.verify_jwt_token(token)
+    if not payload['authorized']:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Invalid credentials..'
+        )
 
-    return{'authorized': True, 'username': payload['username']}
+    return {'username': payload['username'], 'id': payload['id']}

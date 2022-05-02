@@ -118,7 +118,7 @@ class UserRepository:
         if 'username' not in payload:
             return {'authorized': False, 'username': ''}
 
-        return {'authorized': True, 'username': payload['username']}
+        return {'authorized': True, 'username': payload['username'], 'id': payload['id']}
 
 
 def get_user_repository():  # pragma: no cover

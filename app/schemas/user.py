@@ -7,4 +7,5 @@ class User(BaseModel):
 
 
 class UserResponse(BaseModel):
+    id: str
     username: str

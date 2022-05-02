@@ -1,6 +1,8 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.api.v1.user import get_current_user
+
 from app.repositories.transaction import TransactionRepository, get_transaction_repository
 from app.schemas.transaction import Transaction
 
@@ -10,8 +12,8 @@ transaction_router = APIRouter(prefix='/api/v1/transactions')
 
 @transaction_router.get('', status_code=status.HTTP_200_OK)
 def get_all_transaction(
-    tag: Optional[str] = None,
     asset: Optional[str] = None,
+    user: dict = Depends(get_current_user),
     repository: TransactionRepository = Depends(get_transaction_repository)
 ):
     if asset:
@@ -23,6 +25,7 @@ def get_all_transaction(
 @transaction_router.post('', status_code=status.HTTP_201_CREATED)
 def create_new_transaction(
     new_transaction: Transaction,
+    user: dict = Depends(get_current_user),
     repository: TransactionRepository = Depends(get_transaction_repository)
 ):
     try:
@@ -38,6 +41,7 @@ def create_new_transaction(
 
 @transaction_router.get('/portfolio', status_code=status.HTTP_200_OK)
 def calculate_portfolio(
+    user: dict = Depends(get_current_user),
     repository: TransactionRepository = Depends(get_transaction_repository)
 ):
     return {'data': repository.calculate_portfolio()}
@@ -46,6 +50,7 @@ def calculate_portfolio(
 @transaction_router.get('/{id}', status_code=status.HTTP_200_OK)
 def get_transaction_by_id(
     id: str,
+    user: dict = Depends(get_current_user),
     repository: TransactionRepository = Depends(get_transaction_repository)
 ):
     try:
@@ -65,9 +70,27 @@ def get_transaction_by_id(
     return lookup_transaction
 
 
+@transaction_router.put('/{id}', status_code=status.HTTP_200_OK)
+def update_transactionby_id(
+    id: str,
+    update_data: dict,
+    user: dict = Depends(get_current_user),
+    repository: TransactionRepository = Depends(get_transaction_repository)
+):
+    try:
+        updated_transaction = repository.update_by_id(id, update_data)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Transaction could not be updated..'
+        )
+
+    return updated_transaction
+
 @transaction_router.delete('/{id}', status_code=status.HTTP_200_OK)
 def delete_transaction_by_id(
     id: str,
+    user: dict = Depends(get_current_user),
     repository: TransactionRepository = Depends(get_transaction_repository)
 ):
     try:
