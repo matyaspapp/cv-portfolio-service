@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.api.v1.user import get_current_user
+
 from app.repositories.wallet import \
     WalletRepository, \
     get_wallet_repository
@@ -11,6 +13,7 @@ wallet_router = APIRouter(prefix='/api/v1/wallets')
 
 @wallet_router.get('', status_code=status.HTTP_200_OK)
 def get_all_wallet(
+    user: dict = Depends(get_current_user),
     repository: WalletRepository = Depends(get_wallet_repository)
 ):
     return {'data': repository.get_all()}
@@ -19,6 +22,7 @@ def get_all_wallet(
 @wallet_router.post('', status_code=status.HTTP_201_CREATED)
 def create_new_wallet(
     new_wallet: Wallet,
+    user: dict = Depends(get_current_user),
     repository: WalletRepository = Depends(get_wallet_repository)
 ):
     try:
@@ -35,6 +39,7 @@ def create_new_wallet(
 @wallet_router.get('/{id}', status_code=status.HTTP_200_OK)
 def get_wallet_by_id(
     id: str,
+    user: dict = Depends(get_current_user),
     repository: WalletRepository = Depends(get_wallet_repository)
 ):
     try:
@@ -58,6 +63,7 @@ def get_wallet_by_id(
 def update_wallet_by_id(
     id: str,
     update_data: dict,
+    user: dict = Depends(get_current_user),
     repository: WalletRepository = Depends(get_wallet_repository)
 ):
     try:
@@ -74,6 +80,7 @@ def update_wallet_by_id(
 @wallet_router.delete('/{id}', status_code=status.HTTP_200_OK)
 def delete_wallet_by_id(
     id: str,
+    user: dict = Depends(get_current_user),
     repository: WalletRepository = Depends(get_wallet_repository)
 ):
     try:
