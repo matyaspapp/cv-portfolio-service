@@ -3,6 +3,7 @@ from bson.errors import InvalidId
 from pymongo import MongoClient
 
 from app.database.service import CRUDService
+from app.fileprocessor.service import TransactionFileProcessor
 from app.schemas.transaction import Transaction
 from app.serializers.transaction import TransactionSerializer
 
@@ -11,9 +12,11 @@ class TransactionRepository:
     def __init__(
         self,
         crud_service: CRUDService,
+        file_processor: TransactionFileProcessor,
         serializer: TransactionSerializer
     ) -> None:
         self._crud_service = crud_service
+        self._file_processor = file_processor
         self._serializer = serializer
 
     def create(self, new_transaction: Transaction | dict) -> dict:
@@ -125,7 +128,7 @@ class TransactionRepository:
         # group by assets
         for transaction in transactions:
             asset_data = portfolio['assets'].setdefault(
-                transaction['asset'],
+                transaction['asset'].upper(),
                 {
                     'meta': {},
                     'transactions': []
@@ -151,12 +154,17 @@ class TransactionRepository:
 
         return portfolio
 
+    def import_csv(self, file: bytes) -> list:
+        return self._file_processor.import_csv(file)
+
 
 def get_transaction_repository():  # pragma: no cover
     connection = MongoClient()
     crud_service = CRUDService(connection, 'transactions')
+    file_processor = TransactionFileProcessor()
     repository = TransactionRepository(
         crud_service,
+        file_processor,
         TransactionSerializer
     )
     return repository
@@ -165,8 +173,10 @@ def get_transaction_repository():  # pragma: no cover
 def get_test_transaction_repository():  # pragma: no cover
     connection = MongoClient()
     crud_service = CRUDService(connection, 'test_api_transactions')
+    file_processor = TransactionFileProcessor()
     test_repository = TransactionRepository(
         crud_service,
+        file_processor,
         TransactionSerializer
     )
     return test_repository

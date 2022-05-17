@@ -13,7 +13,8 @@ user_router = APIRouter(prefix='/api/v1/users')
 
 @user_router.post(
     '',
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    tags=['Users']
 )
 def create_new_user(
     new_user: User,
@@ -39,7 +40,8 @@ def create_new_user(
 
 @user_router.post(
     '/auth',
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=['Users']
 )
 def auth_user(
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -61,7 +63,8 @@ def auth_user(
 
 @user_router.get(
     '/me',
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=['Users']
 )
 def get_current_user(
     token: str = Depends(oauth2_schema),
