@@ -38,7 +38,11 @@ class TransactionRepositoryCreateTest(unittest.TestCase):
             TEST_TRANSACTION_COLLECTION
         )
         test_serializer = TransactionSerializer()
-        self._repository = TransactionRepository(test_crud_engine, test_serializer)
+        self._repository = TransactionRepository(
+            crud_service=test_crud_engine,
+            file_processor=None,
+            serializer=test_serializer
+        )
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -93,7 +97,11 @@ class TransactionRepositoryGetByIdTest(unittest.TestCase):
             TEST_TRANSACTION_COLLECTION
         )
         test_serializer = TransactionSerializer()
-        self._repository = TransactionRepository(test_crud_engine, test_serializer)
+        self._repository = TransactionRepository(
+            crud_service=test_crud_engine,
+            file_processor=None,
+            serializer=test_serializer
+        )
         self._inserted_transaction_id = str(self._crud_service.create(
             self._TEST_VALID_TRANSACTIONS[0]
         ).inserted_id)
@@ -140,7 +148,11 @@ class TransactionRepositoryGetAllTest(unittest.TestCase):
             TEST_TRANSACTION_COLLECTION
         )
         test_serializer = TransactionSerializer()
-        self._repository = TransactionRepository(test_crud_engine, test_serializer)
+        self._repository = TransactionRepository(
+            crud_service=test_crud_engine,
+            file_processor=None,
+            serializer=test_serializer
+        )
 
         method = getattr(self, self._testMethodName)
         tags = getattr(method, 'tags', {})
@@ -183,8 +195,9 @@ class TransactionRepositoryGetAllByAssetTest(unittest.TestCase):
         )
         test_serializer = TransactionSerializer()
         self._repository = TransactionRepository(
-            test_crud_engine,
-            test_serializer
+            crud_service=test_crud_engine,
+            file_processor=None,
+            serializer=test_serializer
         )
 
         method = getattr(self, self._testMethodName)
@@ -246,8 +259,9 @@ class TransactionRepositoryGetAllByTagTest(unittest.TestCase):
         )
         test_serializer = TransactionSerializer()
         self._repository = TransactionRepository(
-            test_crud_engine,
-            test_serializer
+            crud_service=test_crud_engine,
+            file_processor=None,
+            serializer=test_serializer
         )
 
         method = getattr(self, self._testMethodName)
@@ -309,8 +323,9 @@ class TransactionRepositoryUpdateByIdTest(unittest.TestCase):
         )
         test_serializer = TransactionSerializer()
         self._repository = TransactionRepository(
-            test_crud_engine,
-            test_serializer
+            crud_service=test_crud_engine,
+            file_processor=None,
+            serializer=test_serializer
         )
 
         method = getattr(self, self._testMethodName)
@@ -409,8 +424,9 @@ class TransactionRepositoryDeleteByIdTest(unittest.TestCase):
         )
         test_serializer = TransactionSerializer()
         self._repository = TransactionRepository(
-            test_crud_engine,
-            test_serializer
+            crud_service=test_crud_engine,
+            file_processor=None,
+            serializer=test_serializer
         )
 
         method = getattr(self, self._testMethodName)
@@ -487,8 +503,9 @@ class TransactionRepositoryCalculatePortfolioTest(unittest.TestCase):
         )
         test_serializer = TransactionSerializer()
         self._repository = TransactionRepository(
-            test_crud_engine,
-            test_serializer
+            crud_service=test_crud_engine,
+            file_processor=None,
+            serializer=test_serializer
         )
 
         method = getattr(self, self._testMethodName)

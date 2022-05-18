@@ -5,6 +5,8 @@ from copy import deepcopy
 from fastapi.testclient import TestClient
 from pymongo import MongoClient
 
+from app.api.v1.user import get_current_user
+
 from app.repositories.wallet import \
     get_wallet_repository, \
     get_test_wallet_repository
@@ -16,6 +18,7 @@ from tests.consts import \
     TEST_INVALID_WALLETS
 
 
+portfolio_service.dependency_overrides[get_current_user] = lambda: {'id': 'e5e403a76c58de3a4c2b5f16'}
 portfolio_service.dependency_overrides[get_wallet_repository] = \
     get_test_wallet_repository
 
@@ -173,9 +176,79 @@ class APIWalletGetAllTest(unittest.TestCase):
             self.assertIn(wallet['id'], wallet_ids)
 
 
-# TODO: !! after allowed fields !!
-# class APIWalletUpdateByIdTest(unittest.TestCase):
-#     pass
+class APIWalletUpdateByIdTest(unittest.TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self._mongo_client = MongoClient()
+        method = getattr(self, self._testMethodName)
+        tags = getattr(method, 'tags', {})
+        if 'empty_db' not in tags:
+            for wallet in deepcopy(TEST_VALID_WALLETS):
+                self._mongo_client.local['test_api_wallets'].insert_one(wallet)
+
+            cursor = self._mongo_client.local['test_api_wallets'].find({})
+            self._inserted_wallets = [wallet for wallet in cursor]
+
+    def tearDown(self) -> None:
+        self._mongo_client.local['test_api_wallets'].drop()
+        return super().tearDown()
+
+    def test_getInvalidObjectId_returnHTTP400(self) -> None:
+        test_id = '73571d'
+        response = TEST_CLIENT.put(
+            f'/api/v1/wallets/{test_id}',
+            json={}
+        )
+
+        print(response.text)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('detail', response.json())
+        self.assertEqual(
+            response.json()['detail'],
+            'Wallet could not be updated..'
+        )
+
+    def test_getNonExistsObjectId_returnHTTP400(self) -> None:
+        test_id = '61f5b2c4a3ed85c67a304e5e'
+        response = TEST_CLIENT.put(
+            f'/api/v1/wallets/{test_id}',
+            json={}
+        )
+        
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('detail', response.json())
+        self.assertEqual(
+            response.json()['detail'],
+            'Wallet could not be updated..'
+        )
+
+    def test_getExistsObjectId_returnHTTP200(self) -> None:
+        original_wallet = self._inserted_wallets[0]
+        update_data = {'chain': 'updatedtestchain1'}
+        response = TEST_CLIENT.put(
+            f'''/api/v1/wallets/{original_wallet['_id']}''',
+            json=update_data
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['id'],
+            str(original_wallet['_id'])
+        )
+        self.assertEqual(
+            response.json()['address'],
+            original_wallet['address']
+        )
+        self.assertNotEqual(
+            response.json()['chain'],
+            original_wallet['chain']
+        )
+        self.assertEqual(
+            response.json()['chain'],
+            'updatedtestchain1'
+        )
 
 
 class APIWalletDeleteTest(unittest.TestCase):

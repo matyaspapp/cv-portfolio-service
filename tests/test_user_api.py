@@ -50,7 +50,10 @@ class APIUserCreateTest(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json()['username'], test_user['username'])
+        self.assertEqual(
+            set(response.json()),
+            {'access_token', 'token_type'}
+        )
 
     def test_getExistsUsername_returnHTTP400(self) -> None:
         test_user = self._TEST_VALID_USERS[0]
@@ -168,8 +171,6 @@ class APIUserGetCurrentUserTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            response.json(),
-            {
-                'authorized': True,
-                'username': self._test_user['username']}
+            response.json()['username'],
+            self._test_user['username']
         )

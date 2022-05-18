@@ -5,6 +5,8 @@ from copy import deepcopy
 from fastapi.testclient import TestClient
 from pymongo import MongoClient
 
+from app.api.v1.user import get_current_user
+
 from app.repositories.transaction import \
     get_transaction_repository, \
     get_test_transaction_repository
@@ -17,6 +19,7 @@ from tests.consts import \
     TEST_PORTFOLIO
 
 
+portfolio_service.dependency_overrides[get_current_user] = lambda: {'id': 'e5e403a76c58de3a4c2b5f16'}
 portfolio_service.dependency_overrides[get_transaction_repository] = \
     get_test_transaction_repository
 
@@ -219,9 +222,72 @@ class APITransactionGetAllTest(unittest.TestCase):
             self.assertIn(transaction['id'], transaction_ids)
 
 
-# TODO: !! after allowed fields !!
-# class APITransactionUpdateByIdTest(unittest.TestCase):
-#     pass
+class APITransactionUpdateByIdTest(unittest.TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        self._mongo_client = MongoClient()
+        method = getattr(self, self._testMethodName)
+        tags = getattr(method, 'tags', {})
+        if 'empty_db' not in tags:
+            for transaction in deepcopy(TEST_VALID_TRANSACTIONS):
+                self._mongo_client.local['test_api_transactions'].insert_one(transaction)
+
+            cursor = self._mongo_client.local['test_api_transactions'].find({})
+            self._inserted_transactions = [transaction for transaction in cursor]
+
+    def tearDown(self) -> None:
+        self._mongo_client.local['test_api_transactions'].drop()
+        return super().tearDown()
+
+    def test_getInvalidObjectId_returnHTTP400(self) -> None:
+        test_id = '73571d'
+        response = TEST_CLIENT.put(
+            f'/api/v1/transactions/{test_id}',
+            json={}
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('detail', response.json())
+        self.assertEqual(
+            response.json()['detail'],
+            'Transaction could not be updated..'
+        )
+
+    def test_getNonExistsObjectId_returnHTTP400(self) -> None:
+        test_id = '61f5b2c4a3ed85c67a304e5e'
+        response = TEST_CLIENT.put(
+            f'/api/v1/transactions/{test_id}',
+            json={}
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('detail', response.json())
+        self.assertEqual(
+            response.json()['detail'],
+            'Transaction could not be updated..'
+        )
+
+    def test_getExistsObjectId_returnHTTP200WithUpdatedData(self) -> None:
+        original_transaction = self._inserted_transactions[0]
+        update_data = {'type': 'sell'}
+        response = TEST_CLIENT.put(
+            f'''/api/v1/transactions/{original_transaction['_id']}''',
+            json=update_data
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['id'],
+            str(original_transaction['_id'])
+        )
+        self.assertNotEqual(
+            response.json()['type'],
+            original_transaction['type']
+        )
+        self.assertEqual(
+            response.json()['type'],
+            'sell'
+        )
 
 
 class APITransactionDeleteByIdTest(unittest.TestCase):

@@ -8,9 +8,9 @@ TEST_VALID_WALLETS = [
         'chain': 'testchain1'
     },
     {
-        'owner_id': '61f5b2c4a3ed85c67a304e5e',
-        'address': 'testwalletaddress',
-        'chain': 'testchain'
+        'owner_id': 'e5e403a76c58de3a4c2b5f16',
+        'address': 'testwalletaddress2',
+        'chain': 'testchain2'
     }
 ]
 
@@ -60,7 +60,7 @@ TEST_VALID_TRANSACTIONS = [
         'historical_price': 11680,
         'currency': 'USD',
         'tags': ['retire'],
-        'date': datetime(2022, 2, 4).isoformat(),
+        'date': '2022-2-4',
         'type': 'buy'
     },
     {
@@ -70,7 +70,7 @@ TEST_VALID_TRANSACTIONS = [
         'historical_price': 3342,
         'currency': 'USD',
         'tags': ['fun'],
-        'date': datetime(2022, 2, 4).isoformat(),
+        'date': '2022-2-4',
         'type': 'buy'
     },
     {
@@ -80,7 +80,7 @@ TEST_VALID_TRANSACTIONS = [
         'historical_price': 13690,
         'currency': 'USD',
         'tags': ['fun'],
-        'date': datetime(2022, 2, 21).isoformat(),
+        'date': '2022-2-21',
         'type': 'buy'
     },
 ]
@@ -93,7 +93,7 @@ TEST_INVALID_TRANSACTIONS = [
         'historical_price': 11680,
         'currency': 'USD',
         'tags': [],
-        'date': datetime(2022, 2, 4).isoformat(),
+        'date': '2022-2-4',
         'type': 'buy'
     },
     {
@@ -103,7 +103,7 @@ TEST_INVALID_TRANSACTIONS = [
         'historical_price': 11680,
         'currency': 'USD',
         'tags': [],
-        'date': datetime(2022, 2, 4).isoformat(),
+        'date': '2022-2-4',
         'foo': 'bar'
     }
 ]
@@ -125,7 +125,7 @@ TEST_PORTFOLIO = {
                     'historical_price': 11680,
                     'currency': 'USD',
                     'tags': ['retire'],
-                    'date': datetime(2022, 2, 4).isoformat(),
+                    'date': '2022-2-4',
                     'type': 'buy'
                 },
                 {
@@ -135,7 +135,7 @@ TEST_PORTFOLIO = {
                     'historical_price': 13690,
                     'currency': 'USD',
                     'tags': ['fun'],
-                    'date': datetime(2022, 2, 21).isoformat(),
+                    'date': '2022-2-4',
                     'type': 'buy'
                 },
             ]
@@ -154,7 +154,7 @@ TEST_PORTFOLIO = {
                     'historical_price': 3342,
                     'currency': 'USD',
                     'tags': ['fun'],
-                    'date': datetime(2022, 2, 4).isoformat(),
+                    'date': '2022-2-4',
                     'type': 'buy'
                 },
             ]

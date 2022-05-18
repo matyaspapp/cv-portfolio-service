@@ -59,9 +59,9 @@ class TransactionRepository:
 
         return self._serializer.serialize_one(transaction)
 
-    def get_all(self) -> list[dict]:
+    def get_all(self, **kwargs) -> list[dict]:
         return self._serializer.serialize_many(
-            self._crud_service.get_all()
+            self._crud_service.get_all(**kwargs)
         )
 
     def get_all_by_asset(self, asset: str) -> list[dict]:
@@ -116,8 +116,8 @@ class TransactionRepository:
             deleted_transaction
         )
 
-    def calculate_portfolio(self) -> dict:
-        transactions = self.get_all()
+    def calculate_portfolio(self, **kwargs) -> dict:
+        transactions = self.get_all(**kwargs)
         if not transactions:
             return {}
 
@@ -143,18 +143,27 @@ class TransactionRepository:
             asset_amount = 0
             asset_investment = 0
             for transaction in asset_data['transactions']:
-                asset_amount += transaction['amount']
-                asset_investment += \
-                    transaction['amount'] * transaction['historical_price']
+                if transaction['type'] == 'buy':
+                    asset_amount += transaction['amount']
+                    asset_investment += \
+                        transaction['amount'] * transaction['historical_price']
+                else:
+                    asset_amount -= transaction['amount']
 
             asset_data['meta']['amount'] = asset_amount
             asset_data['meta']['investment'] = asset_investment
-            asset_data['meta']['average_price'] = asset_investment / asset_amount
+            if asset_amount != 0:
+                asset_data['meta']['average_price'] = asset_investment / asset_amount
+            else:
+                asset_data['meta']['average_price'] = 0
             portfolio['investment'] += asset_investment
 
         return portfolio
 
-    def import_csv(self, file: bytes) -> list:
+    def import_csv(self, file: bytes) -> list:  # pragma: no cover
+        if not self._file_processor:
+            return []
+
         return self._file_processor.import_csv(file)
 
 

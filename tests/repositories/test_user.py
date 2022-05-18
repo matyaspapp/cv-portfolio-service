@@ -256,7 +256,7 @@ class UserRepositoryCreateJWTTokenTest(unittest.TestCase):
 
         self.assertEqual(
             set(payload.keys()),
-            {'id', 'username'}
+            {'authorized', 'id', 'username'}
         )
 
 
@@ -298,17 +298,17 @@ class UserRepositoryVerifyJWTTokenTest(unittest.TestCase):
             'jwt_token', True
         )
 
-    def test_getInvalidToken_returnFalse(self) -> None:
+    def test_getInvalidToken_returnEmptyUserData(self) -> None:
         verified_data = self._repository.verify_jwt_token(
             'itisaninvalidjwttoken',
             self._JWT_SECRET
         )
         self.assertEqual(
             verified_data,
-            {'authorized': False, 'username': ''}
+            {'authorized': False, 'id': '', 'username': ''}
         )
 
-    def test_getWrongToken_returnFalse(self) -> None:
+    def test_getWrongToken_returnEmptyUserData(self) -> None:
         wrong_token = jwt.encode(
             {'foo': 'bar'},
             self._JWT_SECRET,
@@ -322,12 +322,12 @@ class UserRepositoryVerifyJWTTokenTest(unittest.TestCase):
 
         self.assertEqual(
             verified_data,
-            {'authorized': False, 'username': ''}
+            {'authorized': False, 'id': '', 'username': ''}
         )
 
-    def test_getValidToken_returnTrue(self) -> None:
+    def test_getValidToken_returnEncodedUserData(self) -> None:
         valid_token = jwt.encode(
-            {'username': 'testuser'},
+            {'username': 'testuser', 'id': 'userid'},
             self._JWT_SECRET,
             algorithm='HS256'
         )
@@ -339,11 +339,10 @@ class UserRepositoryVerifyJWTTokenTest(unittest.TestCase):
 
         self.assertEqual(
             verified_data,
-            {'authorized': True, 'username': 'testuser'}
+            {'authorized': True, 'username': 'testuser', 'id': 'userid'}
         )
 
 
-# TODO: !!! allowed fields !!!
 class UserRepositoryUpdateByUsernameTest(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
@@ -375,6 +374,7 @@ class UserRepositoryUpdateByUsernameTest(unittest.TestCase):
         TEST_USER_CONN.local[TEST_USER_COLLECTION].drop()
 
     def test_getInvalidTypeInput_raiseTypeError(self) -> None:
+        self.assertRaises(TypeError, self._repository.update_by_username)
         self.assertRaises(
             TypeError,
             self._repository.update_by_username,
@@ -389,6 +389,23 @@ class UserRepositoryUpdateByUsernameTest(unittest.TestCase):
             TypeError,
             self._repository.update_by_username,
             True, update_data={}
+        )
+
+    def test_getInvalidTypeUpdateData_raiseTypeError(self) -> None:
+        self.assertRaises(
+            TypeError,
+            self._repository.update_by_username,
+            'testuser', update_data=3
+        )
+        self.assertRaises(
+            TypeError,
+            self._repository.update_by_username,
+            'testuser', update_data=3.14
+        )
+        self.assertRaises(
+            TypeError,
+            self._repository.update_by_username,
+            'testuser', update_data=True
         )
 
     @tag('empty_db')

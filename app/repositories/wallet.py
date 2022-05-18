@@ -47,9 +47,9 @@ class WalletRepository:
 
         return self._serializer.serialize_one(wallet)
 
-    def get_all(self) -> list[dict]:
+    def get_all(self, **kwargs) -> list[dict]:
         return self._serializer.serialize_many(
-            self._crud_service.get_all()
+            self._crud_service.get_all(**kwargs)
         )
 
     def update_by_id(self, id: str | ObjectId, update_data: dict) -> dict:

@@ -54,11 +54,14 @@ class UserRepository:
         if not isinstance(username, str):
             raise TypeError
 
+        if not isinstance(updated_data, dict):
+            raise TypeError
+
         db_user = self.get_by_username(username)
         if not db_user:
             return {}
 
-        update_result = self._crud_service.update_by_id(
+        self._crud_service.update_by_id(
             db_user['id'],
             **updated_data
         )
@@ -93,7 +96,8 @@ class UserRepository:
 
         payload = {
             'id': user_data['id'],
-            'username': user_data['username']
+            'username': user_data['username'],
+            'authorized': True
         }
         token = jwt.encode(payload, jwt_secret, algorithm='HS256')
 
@@ -113,12 +117,16 @@ class UserRepository:
         try:
             payload = jwt.decode(jwt_token, jwt_secret, algorithms=['HS256'])
         except:
-            return {'authorized': False, 'username': ''}
+            return {'authorized': False, 'id': '', 'username': ''}
 
         if 'username' not in payload:
-            return {'authorized': False, 'username': ''}
+            return {'authorized': False, 'id': '', 'username': ''}
 
-        return {'authorized': True, 'username': payload['username'], 'id': payload['id']}
+        return {
+            'authorized': True,
+            'id': payload['id'],
+            'username': payload['username']
+        }
 
 
 def get_user_repository():  # pragma: no cover

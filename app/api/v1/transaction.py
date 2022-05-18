@@ -1,5 +1,7 @@
+import datetime
+
 from typing import Optional
-from fastapi import APIRouter, Depends, File, UploadFile, HTTPException, status
+from fastapi import APIRouter, Depends, UploadFile, HTTPException, status
 
 from app.api.v1.user import get_current_user
 
@@ -25,7 +27,17 @@ def get_all_transaction(
     if asset:
         return {'data': repository.get_all_by_asset(asset)}
 
-    return {'data': repository.get_all()}
+    transactions = repository.get_all(owner_id=user['id'])
+    transactions = sorted(
+        transactions,
+        key=lambda t: datetime.datetime(
+            int(t['date'].split('-')[0]),
+            int(t['date'].split('-')[1]),
+            int(t['date'].split('-')[2])
+        ),
+        reverse=True
+    )
+    return {'data': transactions}
 
 
 @transaction_router.post(
@@ -58,7 +70,7 @@ def calculate_portfolio(
     user: dict = Depends(get_current_user),
     repository: TransactionRepository = Depends(get_transaction_repository)
 ):
-    return {'data': repository.calculate_portfolio()}
+    return {'data': repository.calculate_portfolio(owner_id=user['id'])}
 
 
 @transaction_router.get(
@@ -107,6 +119,12 @@ def update_transactionby_id(
             detail='Transaction could not be updated..'
         )
 
+    if not updated_transaction:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Transaction could not be updated..'
+        )
+
     return updated_transaction
 
 @transaction_router.delete(
@@ -145,7 +163,7 @@ async def import_transaction_csv(
     file: UploadFile,
     user: dict = Depends(get_current_user),
     repository: TransactionRepository = Depends(get_transaction_repository)
-):
+):  # pragma: no cover
     if file.filename.split('.')[-1] not in {'csv'}:
         return{'error': 'Wrong type file..'}
 

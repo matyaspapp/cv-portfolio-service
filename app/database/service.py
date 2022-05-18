@@ -18,8 +18,11 @@ class CRUDService:
         id = ObjectId(id)
         return self._conn.local[self._collecion].find_one({'_id': id})
 
-    def get_all(self) -> list[T]:
-        cursor = self._conn.local[self._collecion].find({})
+    def get_all(self, **kwargs) -> list[T]:
+        if 'owner_id' in kwargs:
+            cursor = self._conn.local[self._collecion].find({'owner_id': kwargs['owner_id']})
+        else:
+            cursor = self._conn.local[self._collecion].find({})
         return [item for item in cursor]
 
     def get_all_by_key(self, key, value):

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from app.repositories.user import UserRepository, get_user_repository
-from app.schemas.user import User, UserResponse
+from app.schemas.user import User
 
 
 oauth2_schema = OAuth2PasswordBearer(tokenUrl='/api/v1/users/auth')
