@@ -14,15 +14,12 @@ description = '''
 tags_metadata = [
     {
         'name': 'Transactions',
-        'description': 'transdesc'
     },
     {
         'name': 'Users',
-        'description': 'usersdesc'
     },
     {
         'name': 'Wallets',
-        'description': 'walletsdesc' 
     },
 ]
 
