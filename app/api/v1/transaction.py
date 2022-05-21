@@ -14,12 +14,6 @@ from app.schemas.transaction import Transaction
 
 transaction_router = APIRouter(prefix='/api/v1/transactions')
 
-@transaction_router.get(
-    '/test',
-    tags=['Transactions']
-)
-def test():
-    return {'hello': 'world'}
 
 @transaction_router.get(
     '',
