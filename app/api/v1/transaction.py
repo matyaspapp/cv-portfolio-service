@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, UploadFile, HTTPException, status
 
 from app.api.v1.user import get_current_user
 
+from app.nomicsapi.service import api_handler
 from app.repositories.transaction import \
     TransactionRepository, \
     get_transaction_repository
@@ -13,6 +14,12 @@ from app.schemas.transaction import Transaction
 
 transaction_router = APIRouter(prefix='/api/v1/transactions')
 
+@transaction_router.get(
+    '/test',
+    tags=['Transactions']
+)
+def test():
+    return {'hello': 'world'}
 
 @transaction_router.get(
     '',
@@ -66,11 +73,14 @@ def create_new_transaction(
     status_code=status.HTTP_200_OK,
     tags=['Transactions']
 )
-def calculate_portfolio(
+async def calculate_portfolio(
     user: dict = Depends(get_current_user),
     repository: TransactionRepository = Depends(get_transaction_repository)
 ):
-    return {'data': repository.calculate_portfolio(owner_id=user['id'])}
+    portfolio = repository.calculate_portfolio(owner_id=user['id'])
+    api_data = await api_handler.get_asset_data(*portfolio['assets'].keys())
+
+    return {'data': {'portfolio': portfolio, 'api_data': api_data}}
 
 
 @transaction_router.get(

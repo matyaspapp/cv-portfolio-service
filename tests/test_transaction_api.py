@@ -372,6 +372,6 @@ class APITransactionCalculatePortfolioTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('data', response.json())
         self.assertEqual(
-            response.json()['data']['investment'],
+            response.json()['data']['portfolio']['investment'],
             TEST_PORTFOLIO['investment']
         )

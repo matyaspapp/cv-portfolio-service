@@ -4,6 +4,7 @@ pymongo
 requests
 pyjwt
 python-multipart
+httpx
 
 # testing
 pytest
