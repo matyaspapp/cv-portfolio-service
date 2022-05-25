@@ -72,6 +72,9 @@ async def calculate_portfolio(
     repository: TransactionRepository = Depends(get_transaction_repository)
 ):
     portfolio = repository.calculate_portfolio(owner_id=user['id'])
+    if not portfolio:
+        return {'data': {'portfolio': {}}}
+
     api_data = await api_handler.get_asset_data(*portfolio['assets'].keys())
 
     return {'data': {'portfolio': portfolio, 'api_data': api_data}}
@@ -169,7 +172,7 @@ async def import_transaction_csv(
     repository: TransactionRepository = Depends(get_transaction_repository)
 ):  # pragma: no cover
     if file.filename.split('.')[-1] not in {'csv'}:
-        return{'error': 'Wrong type file..'}
+        return{'error': 'Wrong file type..'}
 
     try:
         transactions = await repository.import_csv(file)
