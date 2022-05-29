@@ -1,3 +1,4 @@
+import hashlib
 import jwt
 
 from pymongo import MongoClient
@@ -26,6 +27,8 @@ class UserRepository:
         if not new_user_dict['hashed_password']:
             raise ValueError
 
+        new_user_dict['hashed_password'] = hashlib.blake2b(new_user_dict['hashed_password'].encode()).hexdigest()
+
         inserted_id = self._crud_service.create(new_user_dict).inserted_id
         return self._serializer.serialize_one(
             self._crud_service.get_by_id(inserted_id)
@@ -45,7 +48,7 @@ class UserRepository:
         if not lookup_user:
             return {'authenticated': False, 'user': {}}
 
-        if not password == lookup_user['hashed_password']:
+        if not hashlib.blake2b(password.encode()).hexdigest() == lookup_user['hashed_password']:
             return {'authenticated': False, 'user': {}}
 
         return {'authenticated': True, 'user': lookup_user}
